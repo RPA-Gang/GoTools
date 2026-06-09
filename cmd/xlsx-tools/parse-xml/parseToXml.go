@@ -101,7 +101,13 @@ func main() {
 // It adds a dot to the beginning of the extension if it's missing.
 // Returns true if the file extension matches the specified extension, and false otherwise.
 func isXlsxFile(path string) bool {
-	return CheckExtension(path, ".xlsx")
+	if CheckExtension(path, ".xlsx") {
+		return true
+	}
+	if CheckExtension(path, ".xls") {
+		return false // .xls files are not supported due to predating the OpenXML spec.
+	}
+	return false
 }
 
 func parseXlsxFile(path, targetSheet string, sheetIndex int) (output []byte, parseErr error) {
@@ -116,11 +122,9 @@ func parseXlsxFile(path, targetSheet string, sheetIndex int) (output []byte, par
 			parseErr = err
 		}
 	}(file)
-
 	// Get the target sheet, or the default if no target was provided
 	var rows *excelize.Rows
 	var rowsErr error
-
 	if len(targetSheet) > 1 {
 		rows, rowsErr = file.Rows(targetSheet)
 	} else if sheetIndex > 0 {
@@ -135,9 +139,8 @@ func parseXlsxFile(path, targetSheet string, sheetIndex int) (output []byte, par
 	xmlOutput, marshalErr := xml.MarshalIndent(buildDataTable(rows), "", "  ")
 	if marshalErr != nil {
 		return nil, marshalErr
-	} else {
-		output = xmlOutput
 	}
+	output = xmlOutput
 	return output, nil
 }
 
