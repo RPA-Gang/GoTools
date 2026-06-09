@@ -10,8 +10,9 @@ import (
 	"os"
 	"strings"
 
-	. "GoTools/pkg/helpers"
 	"github.com/xuri/excelize/v2"
+
+	. "GoTools/pkg/helpers"
 )
 
 type DataColumn struct {
@@ -31,9 +32,10 @@ type DataTable struct {
 // It uses command line flags to get the user input, and falls back to standard input if no arguments are provided.
 // The function trims any leading/trailing whitespace from the file path.
 // It returns the file path, sheet name, and any input error encountered.
-func getInput() (filePath, sheetName string, inputErr error) {
+func getInput() (filePath, sheetName string, sheetIndex int, inputErr error) {
 	flag.StringVar(&filePath, "path", "", "The path to the .xlsx file to parse")
 	flag.StringVar(&sheetName, "sheet", "", "The name of the worksheet to parse")
+	flag.IntVar(&sheetIndex, "index", 0, "The index of the worksheet to parse (0-based)")
 	flag.Parse()
 
 	if len(filePath) > 0 {
@@ -61,7 +63,7 @@ func main() {
 	defer func() {
 		processingErr.Exit()
 	}()
-	filePath, sheetName, inputErr := getInput()
+	filePath, sheetName, sheetIndex, inputErr := getInput()
 	// Get user input
 	if inputErr != nil {
 		processingErr = ErrMsg{Err: inputErr, Code: ErrStdin}
@@ -83,7 +85,7 @@ func main() {
 		}
 	}
 	// Parse the file as XML
-	output, parseErr := parseXlsxFile(filePath, sheetName)
+	output, parseErr := parseXlsxFile(filePath, sheetName, sheetIndex)
 	if parseErr != nil {
 		processingErr = ErrMsg{Err: parseErr, Code: ErrParse}
 	} else {
@@ -99,10 +101,16 @@ func main() {
 // It adds a dot to the beginning of the extension if it's missing.
 // Returns true if the file extension matches the specified extension, and false otherwise.
 func isXlsxFile(path string) bool {
-	return CheckExtension(path, ".xlsx")
+	if CheckExtension(path, ".xlsx") {
+		return true
+	}
+	if CheckExtension(path, ".xls") {
+		return false // .xls files are not supported due to predating the OpenXML spec.
+	}
+	return false
 }
 
-func parseXlsxFile(path, targetSheet string) (output []byte, parseErr error) {
+func parseXlsxFile(path, targetSheet string, sheetIndex int) (output []byte, parseErr error) {
 	// Open the .xlsx file
 	file, openFileErr := excelize.OpenFile(path)
 	if openFileErr != nil {
@@ -114,13 +122,13 @@ func parseXlsxFile(path, targetSheet string) (output []byte, parseErr error) {
 			parseErr = err
 		}
 	}(file)
-
 	// Get the target sheet, or the default if no target was provided
 	var rows *excelize.Rows
 	var rowsErr error
-
 	if len(targetSheet) > 1 {
 		rows, rowsErr = file.Rows(targetSheet)
+	} else if sheetIndex > 0 {
+		rows, rowsErr = file.Rows(file.GetSheetName(sheetIndex))
 	} else {
 		rows, rowsErr = file.Rows(file.GetSheetName(0))
 	}
@@ -131,9 +139,8 @@ func parseXlsxFile(path, targetSheet string) (output []byte, parseErr error) {
 	xmlOutput, marshalErr := xml.MarshalIndent(buildDataTable(rows), "", "  ")
 	if marshalErr != nil {
 		return nil, marshalErr
-	} else {
-		output = xmlOutput
 	}
+	output = xmlOutput
 	return output, nil
 }
 
