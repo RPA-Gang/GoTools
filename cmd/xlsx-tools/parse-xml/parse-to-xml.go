@@ -45,7 +45,8 @@ func getInput() (filePath, sheetName string, sheetIndex int, inputErr error) {
 		if pipeErr != nil {
 			inputErr = pipeErr
 		}
-		if pipeInput.Mode()&os.ModeNamedPipe != 0 {
+		if //goland:noinspection GoDfaErrorMayBeNotNil
+		pipeInput.Mode()&os.ModeNamedPipe != 0 {
 			reader := bufio.NewReader(os.Stdin)
 			input, bufferErr := reader.ReadString('\n')
 			if bufferErr != nil {
