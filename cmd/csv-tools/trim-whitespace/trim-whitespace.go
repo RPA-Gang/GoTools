@@ -11,6 +11,7 @@ import (
 	. "GoTools/pkg/helpers"
 )
 
+//goland:noinspection DuplicatedCode
 func main() {
 	log.SetLevel(log.DebugLevel)
 	startTime := time.Now()

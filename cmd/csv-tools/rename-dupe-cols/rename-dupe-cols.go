@@ -10,11 +10,10 @@ import (
 	. "GoTools/pkg/helpers"
 )
 
-// main is the entry point of the program.
+//goland:noinspection DuplicatedCode
 func main() {
 	log.SetLevel(log.DebugLevel)
 	startTime := time.Now()
-
 	processingErr := ErrMsg{Code: Success}
 	defer func() {
 		log.Debug(

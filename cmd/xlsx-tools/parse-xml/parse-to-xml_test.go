@@ -152,7 +152,7 @@ func TestParseXlsxFile(t *testing.T) {
 			}
 			// Clean up the test file when done.
 			t.Run(tt.name, func(t *testing.T) {
-				output, err := parseXlsxFile(tt.filePath, tt.targetSheet)
+				output, err := parseXlsxFile(tt.filePath, tt.targetSheet, 0)
 				if (err != nil) != tt.wantErr {
 					t.Errorf("parseXlsxFile() error = %v, wantErr %v", err, tt.wantErr)
 				}
