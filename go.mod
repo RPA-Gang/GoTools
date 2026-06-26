@@ -4,6 +4,7 @@ go 1.22.0
 
 require (
 	github.com/charmbracelet/log v0.4.0
+	github.com/pkg/errors v0.9.1
 	github.com/xuri/excelize/v2 v2.8.1
 )
 
