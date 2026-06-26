@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"strings"
 	"time"
 
 	"github.com/charmbracelet/log"
@@ -19,8 +18,7 @@ func main() {
 	defer func() {
 		log.Debug(
 			"DONE!",
-			"time",
-			time.Since(startTime),
+			"time", time.Since(startTime),
 		)
 		processingErr.Exit()
 	}()
@@ -31,11 +29,10 @@ func main() {
 		processingErr = inputErr
 		return
 	}
-	processingErr = shared.ProcessCSV(inputPath, func(record []string, _ int) ([]string, error) {
-		out := make([]string, len(record))
-		for i, field := range record {
-			out[i] = strings.TrimSpace(field)
+	processingErr = shared.ProcessCSV(inputPath, func(record []string, line int) ([]string, error) {
+		if line == 0 {
+			return RenameDuplicates(record, true), nil
 		}
-		return out, nil
+		return record, nil
 	})
 }

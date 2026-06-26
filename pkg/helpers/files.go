@@ -15,9 +15,8 @@ func PathExists(path string) (bool, error) {
 		return true, nil
 	} else if os.IsNotExist(err) {
 		return false, nil
-	} else {
-		return false, err
 	}
+	return false, err
 }
 
 // CheckExtension checks if the given file path has the given extension.
@@ -34,21 +33,22 @@ func MoveFile(src, dst string) (err error) {
 	if err != nil {
 		return err
 	}
-
+	defer func(originalFile *os.File) {
+		_ = originalFile.Close()
+	}(originalFile)
 	// Create new file.
 	newFile, err := os.Create(dst)
 	if err != nil {
-		err := originalFile.Close()
+		err = originalFile.Close()
 		if err != nil {
 			return err
 		}
 		return err
 	}
-
 	// Copy the bytes to destination from source.
 	_, err = io.Copy(newFile, originalFile)
 	if err != nil {
-		err := newFile.Close()
+		err = newFile.Close()
 		if err != nil {
 			return err
 		}
@@ -58,23 +58,19 @@ func MoveFile(src, dst string) (err error) {
 		}
 		return err
 	}
-
 	// Closes files
 	err = newFile.Close()
 	if err != nil {
 		log.Printf("Failed to close new file: %v", err)
 	}
-
 	err = originalFile.Close()
 	if err != nil {
 		log.Printf("Failed to close original file: %v", err)
 	}
-
 	// Remove original file.
 	err = os.Remove(src)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }

@@ -37,7 +37,6 @@ func getInput() (filePath, sheetName string, sheetIndex int, inputErr error) {
 	flag.StringVar(&sheetName, "sheet", "", "The name of the worksheet to parse")
 	flag.IntVar(&sheetIndex, "index", 0, "The index of the worksheet to parse (0-based)")
 	flag.Parse()
-
 	if len(filePath) > 0 {
 		filePath = strings.TrimSpace(filePath)
 	} else {
@@ -45,7 +44,8 @@ func getInput() (filePath, sheetName string, sheetIndex int, inputErr error) {
 		if pipeErr != nil {
 			inputErr = pipeErr
 		}
-		if pipeInput.Mode()&os.ModeNamedPipe != 0 {
+		if //goland:noinspection GoDfaErrorMayBeNotNil
+		pipeInput.Mode()&os.ModeNamedPipe != 0 {
 			reader := bufio.NewReader(os.Stdin)
 			input, bufferErr := reader.ReadString('\n')
 			if bufferErr != nil {
